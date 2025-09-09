@@ -1,0 +1,4 @@
+name: MMOCore
+version: '1.0-SNAPSHOT'
+main: net.hyperion.mMOCore.MMOCore
+api-version: '1.21'
