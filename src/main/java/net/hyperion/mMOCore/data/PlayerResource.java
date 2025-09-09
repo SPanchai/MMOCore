@@ -11,7 +11,6 @@ public class PlayerResource {
         this.currentValue = maxValue;
     }
 
-    // Getters and Setters
     public String getName() { return name; }
     public double getCurrentValue() { return currentValue; }
     public double getMaxValue() { return maxValue; }

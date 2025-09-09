@@ -1,0 +1,13 @@
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\commands\AttributeCommand.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\commands\MMOCoreCommand.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\data\MMOPlayer.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\data\PlayerManager.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\data\PlayerResource.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\data\StatSource.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\database\IDataSource.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\database\YamlDataSource.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\listeners\MobKillListener.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\listeners\PlayerConnectionListener.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\listeners\PlayerDamageListener.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\MMOCore.java
+C:\Users\STP-PC\IdeaProjects\MMOCore\src\main\java\net\hyperion\mMOCore\stats\StatManager.java

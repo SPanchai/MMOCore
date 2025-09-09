@@ -2,6 +2,7 @@ package net.hyperion.mMOCore.listeners;
 
 import net.hyperion.mMOCore.MMOCore;
 import net.hyperion.mMOCore.data.MMOPlayer;
+import net.hyperion.mMOCore.data.MMOPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,14 +21,12 @@ public class PlayerConnectionListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        // Load data asynchronously to prevent lag if the data source is slow
         new BukkitRunnable() {
             @Override
             public void run() {
                 plugin.getLogger().info("Loading data for " + player.getName() + "...");
                 MMOPlayer mmoPlayer = plugin.getDataSource().loadPlayer(player);
-
-                // Switch back to the main server thread to add the player to the cache
+                plugin.getStatManager().recalculateStats(mmoPlayer);
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -45,7 +44,6 @@ public class PlayerConnectionListener implements Listener {
         MMOPlayer mmoPlayer = plugin.getPlayerManager().getMMOPlayer(player);
 
         if (mmoPlayer != null) {
-            // Save data asynchronously
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -54,7 +52,6 @@ public class PlayerConnectionListener implements Listener {
                 }
             }.runTaskAsynchronously(plugin);
 
-            // Remove player data from the cache immediately
             plugin.getPlayerManager().removePlayer(player);
         }
     }

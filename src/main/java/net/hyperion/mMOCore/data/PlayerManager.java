@@ -5,9 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Manages the cache of MMOPlayer data for all online players.
- */
 public class PlayerManager {
     private final Map<UUID, MMOPlayer> onlinePlayers = new HashMap<>();
 
@@ -26,5 +23,8 @@ public class PlayerManager {
     public boolean isPlayerLoaded(Player player) {
         return onlinePlayers.containsKey(player.getUniqueId());
     }
-    public Map<UUID, MMOPlayer> getOnlinePlayers() { return onlinePlayers; }
+
+    public Map<UUID, MMOPlayer> getOnlinePlayers() {
+        return onlinePlayers;
+    }
 }

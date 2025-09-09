@@ -8,12 +8,9 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
-/**
- * A data source implementation that stores player data in individual YAML files.
- */
 public class YamlDataSource implements IDataSource {
-
     private final MMOCore plugin;
     private File dataFolder;
 
@@ -35,10 +32,17 @@ public class YamlDataSource implements IDataSource {
         File playerFile = new File(dataFolder, mmoPlayer.getPlayerUUID().toString() + ".yml");
         FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
 
-        // We will add more data to save here later (level, attributes, etc.)
         config.set("character.name", mmoPlayer.getCharacterName());
         config.set("character.class", mmoPlayer.getPlayerClassId());
         config.set("character.skills", mmoPlayer.getLearnedSkills());
+        config.set("stats.level", mmoPlayer.getLevel());
+        config.set("stats.experience", mmoPlayer.getExperience());
+        config.set("stats.attribute-points", mmoPlayer.getAttributePoints());
+
+
+        for (Map.Entry<String, Integer> entry : mmoPlayer.getPermanentAttributes().entrySet()) {
+            config.set("stats.attributes." + entry.getKey(), entry.getValue());
+        }
 
         try {
             config.save(playerFile);
@@ -52,27 +56,45 @@ public class YamlDataSource implements IDataSource {
     public MMOPlayer loadPlayer(Player player) {
         File playerFile = new File(dataFolder, player.getUniqueId().toString() + ".yml");
         if (!playerFile.exists()) {
-            // Player is new, create a default profile for them.
             plugin.getLogger().info("Creating new player data file for " + player.getName());
             MMOPlayer newMMOPlayer = new MMOPlayer(player.getUniqueId(), player.getName(), 1);
-            savePlayer(newMMOPlayer); // Save the new profile immediately
+            savePlayer(newMMOPlayer);
             return newMMOPlayer;
         }
 
-        // Player has existing data, load it.
         FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
         MMOPlayer mmoPlayer = new MMOPlayer(player.getUniqueId(), player.getName(), 1);
 
-        // We will add more data to load here later
         mmoPlayer.setPlayerClassId(config.getString("character.class", "NONE"));
         mmoPlayer.getLearnedSkills().addAll(config.getStringList("character.skills"));
 
+        try {
+            java.lang.reflect.Field levelField = MMOPlayer.class.getDeclaredField("level");
+            levelField.setAccessible(true);
+            levelField.setInt(mmoPlayer, config.getInt("stats.level", 1));
+
+            java.lang.reflect.Field expField = MMOPlayer.class.getDeclaredField("experience");
+            expField.setAccessible(true);
+            expField.setDouble(mmoPlayer, config.getDouble("stats.experience", 0));
+
+            java.lang.reflect.Field pointsField = MMOPlayer.class.getDeclaredField("attributePoints");
+            pointsField.setAccessible(true);
+            pointsField.setInt(mmoPlayer, config.getInt("stats.attribute-points", 0));
+
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        if (config.isConfigurationSection("stats.attributes")) {
+            for (String key : config.getConfigurationSection("stats.attributes").getKeys(false)) {
+                mmoPlayer.getPermanentAttributes().put(key.toUpperCase(), config.getInt("stats.attributes." + key));
+            }
+        }
         return mmoPlayer;
     }
 
     @Override
     public void shutdown() {
-        // For YAML, there's no active connection to close, so we can leave this empty.
         plugin.getLogger().info("YAML Data Source has been shut down.");
     }
 }

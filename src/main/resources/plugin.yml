@@ -1,8 +1,13 @@
 name: MMOCore
-version: '1.0-SNAPSHOT'
+version: '1.0.0'
 main: net.hyperion.mMOCore.MMOCore
 api-version: '1.21'
+author: YourName
+description: The core data foundation for the Hyperion MMORPG project.
 commands:
   mmocore:
-    description: Main command for MMOCore.
-    usage: /<command>
+    description: Main debug command for MMOCore.
+    usage: /<command> check
+  attribute:
+    description: Spend your attribute points.
+    usage: /<command> spend <str|dex|int> <amount>
