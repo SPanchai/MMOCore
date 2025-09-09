@@ -26,4 +26,5 @@ public class PlayerManager {
     public boolean isPlayerLoaded(Player player) {
         return onlinePlayers.containsKey(player.getUniqueId());
     }
+    public Map<UUID, MMOPlayer> getOnlinePlayers() { return onlinePlayers; }
 }

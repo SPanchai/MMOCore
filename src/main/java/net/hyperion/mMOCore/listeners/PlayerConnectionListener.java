@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class PlayerConnectionListener implements Listener {
     private final MMOCore plugin;
@@ -19,27 +20,41 @@ public class PlayerConnectionListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        // TODO: In the future, this will open the Character Selection GUI.
-        // For now, we will simulate loading a default character to test the system.
+        // Load data asynchronously to prevent lag if the data source is slow
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                plugin.getLogger().info("Loading data for " + player.getName() + "...");
+                MMOPlayer mmoPlayer = plugin.getDataSource().loadPlayer(player);
 
-        plugin.getLogger().info("Loading data for " + player.getName() + "...");
-
-        // TODO: Replace this with loading from the Data Abstraction Layer (DAL).
-        MMOPlayer mmoPlayer = new MMOPlayer(player.getUniqueId(), player.getName(), 1);
-        plugin.getPlayerManager().addPlayer(mmoPlayer);
-
-        player.sendMessage("Welcome! Your MMOCore data has been loaded.");
+                // Switch back to the main server thread to add the player to the cache
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        plugin.getPlayerManager().addPlayer(mmoPlayer);
+                        player.sendMessage("Welcome! Your MMOCore data has been loaded.");
+                    }
+                }.runTask(plugin);
+            }
+        }.runTaskAsynchronously(plugin);
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        if (plugin.getPlayerManager().isPlayerLoaded(player)) {
+        MMOPlayer mmoPlayer = plugin.getPlayerManager().getMMOPlayer(player);
 
-            // TODO: Call the DAL to save character data asynchronously.
-            plugin.getLogger().info("Saving data for " + player.getName() + "...");
+        if (mmoPlayer != null) {
+            // Save data asynchronously
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    plugin.getLogger().info("Saving data for " + player.getName() + "...");
+                    plugin.getDataSource().savePlayer(mmoPlayer);
+                }
+            }.runTaskAsynchronously(plugin);
 
-            // Remove player data from the cache
+            // Remove player data from the cache immediately
             plugin.getPlayerManager().removePlayer(player);
         }
     }
