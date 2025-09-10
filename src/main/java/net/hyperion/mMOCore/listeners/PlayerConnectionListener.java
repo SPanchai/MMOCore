@@ -2,7 +2,6 @@ package net.hyperion.mMOCore.listeners;
 
 import net.hyperion.mMOCore.MMOCore;
 import net.hyperion.mMOCore.data.MMOPlayer;
-import net.hyperion.mMOCore.data.MMOPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,13 +23,27 @@ public class PlayerConnectionListener implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                plugin.getLogger().info("Loading data for " + player.getName() + "...");
                 MMOPlayer mmoPlayer = plugin.getDataSource().loadPlayer(player);
-                plugin.getStatManager().recalculateStats(mmoPlayer);
+
                 new BukkitRunnable() {
                     @Override
                     public void run() {
                         plugin.getPlayerManager().addPlayer(mmoPlayer);
+
+                        // Recalculate stats first to determine max health
+                        plugin.getStatManager().recalculateStats(mmoPlayer);
+
+                        // Initialize current health after stats are calculated
+                        if (mmoPlayer.loadedHealth <= -1) { // New player
+                            mmoPlayer.setCurrentHealth(mmoPlayer.getFunctionalStat("MAX_HEALTH"));
+                        } else { // Existing player
+                            mmoPlayer.setCurrentHealth(Math.min(mmoPlayer.loadedHealth, mmoPlayer.getFunctionalStat("MAX_HEALTH")));
+                        }
+
+                        // Apply the final scaled health value to the vanilla bar and UI
+                        plugin.getStatManager().applyScaledHealth(mmoPlayer);
+                        plugin.getUiManager().updateActionBar(mmoPlayer);
+
                         player.sendMessage("Welcome! Your MMOCore data has been loaded.");
                     }
                 }.runTask(plugin);
@@ -47,7 +60,6 @@ public class PlayerConnectionListener implements Listener {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    plugin.getLogger().info("Saving data for " + player.getName() + "...");
                     plugin.getDataSource().savePlayer(mmoPlayer);
                 }
             }.runTaskAsynchronously(plugin);

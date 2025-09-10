@@ -2,7 +2,6 @@ package net.hyperion.mMOCore.listeners;
 
 import net.hyperion.mMOCore.MMOCore;
 import net.hyperion.mMOCore.data.MMOPlayer;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,56 +9,56 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class PlayerDamageListener implements Listener {
-
     private final MMOCore plugin;
-    private final Random random = new Random();
-
     public PlayerDamageListener(MMOCore plugin) {
         this.plugin = plugin;
     }
 
-    // We run at HIGHEST priority to ensure we are the final calculation.
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlayerDamage(EntityDamageByEntityEvent event) {
-        // We only care about players attacking other entities for now.
-        if (!(event.getDamager() instanceof Player)) {
-            return;
-        }
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player)) return;
+        if (!(event.getEntity() instanceof LivingEntity)) return;
 
         Player attacker = (Player) event.getDamager();
-        Entity victim = event.getEntity();
-
-        // Ensure the victim is a living entity
-        if (!(victim instanceof LivingEntity)) {
-            return;
-        }
+        LivingEntity victim = (LivingEntity) event.getEntity();
 
         MMOPlayer attackerData = plugin.getPlayerManager().getMMOPlayer(attacker);
-        if (attackerData == null) {
-            return; // Attacker data not loaded, do nothing.
-        }
+        if (attackerData == null) return;
 
-        // --- DAMAGE CALCULATION ---
+        String damageType = "PHYSICAL";
 
-        // 1. Get base damage from player's stats
-        double finalDamage = attackerData.getFunctionalStat("PHYSICAL_DAMAGE");
+        double minDamage = attackerData.getFunctionalStat("MIN_" + damageType + "_DAMAGE");
+        double maxDamage = attackerData.getFunctionalStat("MAX_" + damageType + "_DAMAGE");
+        double damage = ThreadLocalRandom.current().nextDouble(minDamage, maxDamage);
 
-        // 2. Calculate Critical Hit
         double critRate = attackerData.getFunctionalStat("CRITICAL_RATE");
-        if (random.nextDouble() * 100 < critRate) {
-            // It's a critical hit!
+        if (ThreadLocalRandom.current().nextDouble(100) < critRate) {
             double critDamageMultiplier = 1.0 + (attackerData.getFunctionalStat("CRITICAL_DAMAGE") / 100.0);
-            finalDamage *= critDamageMultiplier;
-            // TODO: Add a critical hit indicator (sound, particle).
+            damage *= critDamageMultiplier;
         }
 
-        // 3. TODO: Calculate victim's defense (when MMOMonster is implemented)
-        // For now, we will just apply the damage directly.
+        double defense = 0;
+        if (victim instanceof Player) {
+            MMOPlayer victimData = plugin.getPlayerManager().getMMOPlayer((Player) victim);
+            if (victimData != null) {
+                defense = victimData.getFunctionalStat(damageType + "_DEFENSE");
+            }
+        }
 
-        // 4. Set the final damage for the event
-        event.setDamage(finalDamage);
+        double finalDamage = damage * (100 / (100 + defense));
+        event.setDamage(0); // Cancel the vanilla damage event
+
+        if (victim instanceof Player) {
+            MMOPlayer victimData = plugin.getPlayerManager().getMMOPlayer((Player) victim);
+            if (victimData != null) {
+                // Use the new, safe damage method.
+                victimData.damage(finalDamage);
+            }
+        } else {
+            victim.damage(finalDamage);
+        }
     }
 }

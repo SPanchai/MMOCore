@@ -1,5 +1,6 @@
 package net.hyperion.mMOCore.data;
 
+import net.hyperion.mMOCore.MMOCore;
 import java.util.*;
 
 public class MMOPlayer {
@@ -13,22 +14,22 @@ public class MMOPlayer {
     private double experience;
     private int attributePoints;
 
-    // --- NEW ATTRIBUTE SYSTEM ---
-    // Attributes from spending points
+    // Attribute System
     private final Map<String, Integer> permanentAttributes = new HashMap<>();
-    // Temporary attributes from items, buffs, etc.
     private final Map<UUID, StatSource> bonusAttributeSources = new HashMap<>();
 
-    // --- NEW FUNCTIONAL STATS ---
-    // The final, calculated stats after all formulas are applied.
+    // Final Calculated Stats
     private final Map<String, Double> functionalStats = new HashMap<>();
 
     // State & Specialization
     private String playerClassId;
     private final List<String> learnedSkills = new ArrayList<>();
-
-    // Dynamic Resources
     private final Map<String, PlayerResource> resources = new HashMap<>();
+
+    // Health & Combat State
+    private double currentHealth;
+    private long lastDamageTime;
+    public transient double loadedHealth = -1; // Used only during the loading process
 
     public MMOPlayer(UUID playerUUID, String characterName, int characterSlot) {
         this.playerUUID = playerUUID;
@@ -40,77 +41,47 @@ public class MMOPlayer {
     private void initializeDefaults() {
         this.level = 1;
         this.experience = 0;
-        this.playerClassId = "NONE";
+        this.playerClassId = "Adventurer";
         this.attributePoints = 5;
+        this.lastDamageTime = 0;
 
         permanentAttributes.put("STRENGTH", 5);
         permanentAttributes.put("DEXTERITY", 5);
         permanentAttributes.put("INTELLIGENCE", 5);
+        permanentAttributes.put("VITALITY", 5);
+        permanentAttributes.put("LUCK", 5);
 
         resources.put("MANA", new PlayerResource("MANA", 100));
     }
 
-    // --- NEW METHODS FOR STATS ---
-
     /**
-     * Gets the value of a permanent attribute.
-     * @param attribute The attribute to get (e.g., "STRENGTH").
-     * @return The value of the permanent attribute.
+     * Applies damage to the player's true health pool and updates their display.
+     * @param amount The amount of damage to deal.
      */
-    public int getPermanentAttribute(String attribute) {
-        return permanentAttributes.getOrDefault(attribute.toUpperCase(), 0);
-    }
+    public void damage(double amount) {
+        this.currentHealth = Math.max(0, this.currentHealth - amount);
+        this.lastDamageTime = System.currentTimeMillis(); // Update combat timer
 
-    /**
-     * Calculates the total bonus for a single attribute from all temporary sources.
-     * @param attribute The attribute to get the bonus for.
-     * @return The total bonus value.
-     */
-    public int getBonusAttribute(String attribute) {
-        return bonusAttributeSources.values().stream()
-                .mapToInt(source -> source.getAttributeBonuses().getOrDefault(attribute.toUpperCase(), 0))
-                .sum();
+        // After changing health, we MUST update the visual displays
+        MMOCore.getInstance().getStatManager().applyScaledHealth(this);
+        MMOCore.getInstance().getUiManager().updateActionBar(this);
+
+        // TODO: Handle player death if currentHealth <= 0
     }
 
     /**
-     * Calculates the final, total value of an attribute.
-     * @param attribute The attribute to get.
-     * @return The permanent + bonus value.
+     * Heals the player's true health pool and updates their display.
+     * @param amount The amount of health to restore.
      */
-    public int getTotalAttribute(String attribute) {
-        return getPermanentAttribute(attribute) + getBonusAttribute(attribute);
+    public void heal(double amount) {
+        double maxHealth = getFunctionalStat("MAX_HEALTH");
+        this.currentHealth = Math.min(maxHealth, this.currentHealth + amount);
+
+        // After changing health, we MUST update the visual displays
+        MMOCore.getInstance().getStatManager().applyScaledHealth(this);
+        MMOCore.getInstance().getUiManager().updateActionBar(this);
     }
 
-    /**
-     * Adds or updates a temporary source of attribute bonuses (e.g., an equipped item).
-     * @param source The StatSource to add.
-     */
-    public void addStatSource(StatSource source) {
-        bonusAttributeSources.put(source.getSourceId(), source);
-    }
-
-    /**
-     * Removes a temporary source of attribute bonuses (e.g., an unequipped item).
-     * @param sourceId The unique ID of the source to remove.
-     */
-    public void removeStatSource(UUID sourceId) {
-        bonusAttributeSources.remove(sourceId);
-    }
-
-    /**
-     * Gets a final, calculated functional stat.
-     * @param stat The functional stat to get (e.g., "MAX_HEALTH").
-     * @return The calculated value.
-     */
-    public double getFunctionalStat(String stat) {
-        return functionalStats.getOrDefault(stat.toUpperCase(), 0.0);
-    }
-
-    public Map<String, Double> getFunctionalStats() {
-        return functionalStats;
-    }
-
-    // --- Existing Methods ---
     public void addExperience(double amount) {
         this.experience += amount;
         while (this.experience >= getRequiredExperience()) {
@@ -128,7 +99,14 @@ public class MMOPlayer {
         return Math.floor(100 * Math.pow(this.level, 1.5));
     }
 
-    // Getters and Setters
+    public int getPermanentAttribute(String attribute) { return permanentAttributes.getOrDefault(attribute.toUpperCase(), 0); }
+    public int getBonusAttribute(String attribute) { return bonusAttributeSources.values().stream().mapToInt(source -> source.getAttributeBonuses().getOrDefault(attribute.toUpperCase(), 0)).sum(); }
+    public int getTotalAttribute(String attribute) { return getPermanentAttribute(attribute) + getBonusAttribute(attribute); }
+    public void addStatSource(StatSource source) { bonusAttributeSources.put(source.getSourceId(), source); }
+    public void removeStatSource(UUID sourceId) { bonusAttributeSources.remove(sourceId); }
+    public double getBonusFunctionalStat(String stat) { return bonusAttributeSources.values().stream().mapToDouble(source -> source.getFunctionalStatBonuses().getOrDefault(stat.toUpperCase(), 0.0)).sum(); }
+    public double getFunctionalStat(String stat) { return functionalStats.getOrDefault(stat.toUpperCase(), 0.0); }
+    public Map<String, Double> getFunctionalStats() { return functionalStats; }
     public UUID getPlayerUUID() { return playerUUID; }
     public String getCharacterName() { return characterName; }
     public String getPlayerClassId() { return playerClassId; }
@@ -139,4 +117,8 @@ public class MMOPlayer {
     public Map<String, Integer> getPermanentAttributes() { return permanentAttributes; }
     public void setAttributePoints(int attributePoints) { this.attributePoints = attributePoints; }
     public List<String> getLearnedSkills() { return learnedSkills; }
+    public double getCurrentHealth() { return currentHealth; }
+    public void setCurrentHealth(double currentHealth) { this.currentHealth = currentHealth; }
+    public long getLastDamageTime() { return lastDamageTime; }
+    public void setLastDamageTime(long lastDamageTime) { this.lastDamageTime = lastDamageTime; }
 }

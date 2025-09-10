@@ -4,28 +4,31 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Represents a temporary source of attributes, such as an item, a buff, or a passive skill.
- * Each source has a unique ID so it can be added and removed without conflict.
- */
 public class StatSource {
 
     private final UUID sourceId;
     private final Map<String, Integer> attributeBonuses;
+    private final Map<String, Double> functionalStatBonuses;
 
     public StatSource() {
         this.sourceId = UUID.randomUUID();
         this.attributeBonuses = new HashMap<>();
+        this.functionalStatBonuses = new HashMap<>();
     }
 
     public void setAttributeBonus(String attribute, int value) {
         attributeBonuses.put(attribute.toUpperCase(), value);
     }
+    public void setFunctionalStatBonus(String stat, double value) {
+        functionalStatBonuses.put(stat.toUpperCase(), value);
+    }
 
     public Map<String, Integer> getAttributeBonuses() {
         return attributeBonuses;
     }
-
+    public Map<String, Double> getFunctionalStatBonuses() {
+        return functionalStatBonuses;
+    }
     public UUID getSourceId() {
         return sourceId;
     }

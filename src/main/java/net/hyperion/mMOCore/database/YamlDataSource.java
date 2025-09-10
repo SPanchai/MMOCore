@@ -38,7 +38,7 @@ public class YamlDataSource implements IDataSource {
         config.set("stats.level", mmoPlayer.getLevel());
         config.set("stats.experience", mmoPlayer.getExperience());
         config.set("stats.attribute-points", mmoPlayer.getAttributePoints());
-
+        config.set("state.current-health", mmoPlayer.getCurrentHealth());
 
         for (Map.Entry<String, Integer> entry : mmoPlayer.getPermanentAttributes().entrySet()) {
             config.set("stats.attributes." + entry.getKey(), entry.getValue());
@@ -64,7 +64,7 @@ public class YamlDataSource implements IDataSource {
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
         MMOPlayer mmoPlayer = new MMOPlayer(player.getUniqueId(), player.getName(), 1);
-
+        mmoPlayer.loadedHealth = config.getDouble("state.current-health", -1);
         mmoPlayer.setPlayerClassId(config.getString("character.class", "NONE"));
         mmoPlayer.getLearnedSkills().addAll(config.getStringList("character.skills"));
 

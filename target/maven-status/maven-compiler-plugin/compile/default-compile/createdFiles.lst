@@ -1,6 +1,0 @@
-net\hyperion\mMOCore\commands\AttributeCommand.class
-net\hyperion\mMOCore\listeners\PlayerDamageListener.class
-net\hyperion\mMOCore\listeners\MobKillListener.class
-net\hyperion\mMOCore\data\StatSource.class
-net\hyperion\mMOCore\commands\MMOCoreCommand.class
-net\hyperion\mMOCore\stats\StatManager.class
