@@ -1,0 +1,174 @@
+# MMOCore Full Stats Configuration
+# All formulas: result = base + (attribute * multiplier) + equipment_bonuses
+
+# Experience and Leveling
+experience:
+  base-required: 100.0
+  attribute-points-per-level: 5
+  mob-kill-experience: 25.0
+
+# Health Regeneration
+hp-regen:
+  rate-multiplier: 2.0
+  combat-cooldown-seconds: 10
+  enabled: true
+
+# Starting Attributes
+attributes:
+  starting-points: 5
+  starting-values:
+    strength: 5
+    dexterity: 5
+    intelligence: 5
+    vitality: 5
+    luck: 5
+
+# Complete Stat Formulas
+stat-formulas:
+  # Core Stats
+  max-health:
+    base: 20.0
+    vitality-multiplier: 2.0
+    strength-multiplier: 1.0
+    level-multiplier: 2.0
+
+  max-mana:
+    base: 100.0
+    intelligence-multiplier: 5.0
+    level-multiplier: 5.0
+
+  health-regen:
+    vitality-multiplier: 0.5
+    level-multiplier: 0.1
+
+  mana-regen:
+    intelligence-multiplier: 0.3
+    level-multiplier: 0.2
+
+  # Damage Stats
+  physical-damage:
+    base: 1.0
+    min-strength-multiplier: 0.8
+    max-strength-multiplier: 1.2
+    level-multiplier: 0.5
+
+  magical-damage:
+    base: 1.0
+    min-intelligence-multiplier: 0.8
+    max-intelligence-multiplier: 1.2
+    level-multiplier: 0.5
+
+  ranged-damage:
+    base: 1.0
+    min-dexterity-multiplier: 0.8
+    max-dexterity-multiplier: 1.2
+    level-multiplier: 0.5
+
+  # Critical Stats
+  critical-rate:
+    base: 5.0
+    luck-multiplier: 0.05
+    dexterity-multiplier: 0.05
+
+  critical-damage:
+    base: 50.0
+    luck-multiplier: 0.5
+    dexterity-multiplier: 0.2
+
+  # Defensive Stats
+  physical-defense:
+    vitality-multiplier: 0.4
+    strength-multiplier: 0.1
+    level-multiplier: 0.4
+
+  magical-defense:
+    intelligence-multiplier: 0.5
+    vitality-multiplier: 0.2
+    level-multiplier: 0.4
+
+  ranged-defense:
+    dexterity-multiplier: 0.3
+    vitality-multiplier: 0.2
+    level-multiplier: 0.4
+
+  critical-defense:
+    vitality-multiplier: 0.02
+
+  # Evasion Stats
+  dodge-rate:
+    dexterity-multiplier: 0.1
+    luck-multiplier: 0.05
+
+  block-rate:
+    strength-multiplier: 0.08
+    vitality-multiplier: 0.12
+
+  block-value:
+    strength-multiplier: 0.5
+    level-multiplier: 1.0
+
+  # Speed Stats
+  attack-speed:
+    base: 4.0
+    dexterity-multiplier: 0.015
+
+  cast-speed:
+    base: 1.0
+    intelligence-multiplier: 0.01
+    dexterity-multiplier: 0.005
+
+  movement-speed:
+    base: 0.13
+    dexterity-multiplier: 0.0005
+    strength-multiplier: 0.0002
+
+  # Utility Stats
+  accuracy:
+    base: 90.0
+    dexterity-multiplier: 0.3
+    level-multiplier: 0.5
+
+  armor-penetration:
+    strength-multiplier: 0.2
+
+  magic-penetration:
+    intelligence-multiplier: 0.15
+
+  lifesteal:
+    vitality-multiplier: 0.05
+
+  mana-steal:
+    intelligence-multiplier: 0.03
+
+  # Bonus Stats
+  experience-rate:
+    luck-multiplier: 0.1
+
+  drop-rate:
+    luck-multiplier: 0.2
+
+  gold-find:
+    luck-multiplier: 0.3
+
+  # Resistance Stats
+  resistance:
+    vitality-multiplier: 0.1
+
+  damage-reduction:
+    vitality-multiplier: 0.05
+
+# UI Settings
+ui:
+  action-bar-update-interval: 40
+  scoreboard-enabled: true
+
+# Database Settings
+database:
+  type: "YAML"
+  auto-save-interval: 300
+
+# Messages
+messages:
+  welcome: "&aWelcome! Your MMOCore data has been loaded."
+  config-reloaded: "&aMMOCore configuration reloaded successfully!"
+  invalid-command: "&cInvalid command. Use /mmocore help for available commands."

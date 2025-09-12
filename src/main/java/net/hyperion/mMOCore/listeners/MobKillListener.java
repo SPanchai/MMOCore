@@ -12,7 +12,10 @@ import org.bukkit.event.entity.EntityDeathEvent;
 
 public class MobKillListener implements Listener {
     private final MMOCore plugin;
-    public MobKillListener(MMOCore plugin) { this.plugin = plugin; }
+
+    public MobKillListener(MMOCore plugin) {
+        this.plugin = plugin;
+    }
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
@@ -22,13 +25,15 @@ public class MobKillListener implements Listener {
         MMOPlayer mmoPlayer = plugin.getPlayerManager().getMMOPlayer(killer);
         if (mmoPlayer == null) return;
 
-        double expToGrant = 25;
+        // Get experience amount from config
+        double expToGrant = plugin.getConfig().getDouble("experience.mob-kill-experience", 25.0);
         mmoPlayer.addExperience(expToGrant);
 
         // Update the main UI bar first
         plugin.getUiManager().updateActionBar(mmoPlayer);
 
         // Then, temporarily flash an "EXP GAIN" message over it
-        killer.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.GOLD + "+ " + expToGrant + " EXP"));
+        killer.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                TextComponent.fromLegacyText(ChatColor.GOLD + "+ " + expToGrant + " EXP"));
     }
 }

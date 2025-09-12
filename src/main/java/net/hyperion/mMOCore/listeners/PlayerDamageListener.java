@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class PlayerDamageListener implements Listener {
     private final MMOCore plugin;
+
     public PlayerDamageListener(MMOCore plugin) {
         this.plugin = plugin;
     }
@@ -34,12 +35,14 @@ public class PlayerDamageListener implements Listener {
         double maxDamage = attackerData.getFunctionalStat("MAX_" + damageType + "_DAMAGE");
         double damage = ThreadLocalRandom.current().nextDouble(minDamage, maxDamage);
 
+        // Critical hit calculation
         double critRate = attackerData.getFunctionalStat("CRITICAL_RATE");
         if (ThreadLocalRandom.current().nextDouble(100) < critRate) {
             double critDamageMultiplier = 1.0 + (attackerData.getFunctionalStat("CRITICAL_DAMAGE") / 100.0);
             damage *= critDamageMultiplier;
         }
 
+        // Defense calculation
         double defense = 0;
         if (victim instanceof Player) {
             MMOPlayer victimData = plugin.getPlayerManager().getMMOPlayer((Player) victim);
@@ -51,13 +54,21 @@ public class PlayerDamageListener implements Listener {
         double finalDamage = damage * (100 / (100 + defense));
         event.setDamage(0); // Cancel the vanilla damage event
 
+        // Apply custom damage directly to vanilla health
         if (victim instanceof Player) {
-            MMOPlayer victimData = plugin.getPlayerManager().getMMOPlayer((Player) victim);
+            Player victimPlayer = (Player) victim;
+            MMOPlayer victimData = plugin.getPlayerManager().getMMOPlayer(victimPlayer);
+
             if (victimData != null) {
-                // Use the new, safe damage method.
-                victimData.damage(finalDamage);
+                // Update combat timer for victim
+                victimData.setLastDamageTime(System.currentTimeMillis());
+
+                // Apply damage to vanilla health
+                double newHealth = Math.max(0, victimPlayer.getHealth() - finalDamage);
+                victimPlayer.setHealth(newHealth);
             }
         } else {
+            // For non-player entities, use vanilla damage
             victim.damage(finalDamage);
         }
     }

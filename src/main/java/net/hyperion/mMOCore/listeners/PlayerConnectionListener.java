@@ -33,15 +33,11 @@ public class PlayerConnectionListener implements Listener {
                         // Recalculate stats first to determine max health
                         plugin.getStatManager().recalculateStats(mmoPlayer);
 
-                        // Initialize current health after stats are calculated
-                        if (mmoPlayer.loadedHealth <= -1) { // New player
-                            mmoPlayer.setCurrentHealth(mmoPlayer.getFunctionalStat("MAX_HEALTH"));
-                        } else { // Existing player
-                            mmoPlayer.setCurrentHealth(Math.min(mmoPlayer.loadedHealth, mmoPlayer.getFunctionalStat("MAX_HEALTH")));
-                        }
+                        // FIXED: Always set player to full health on login
+                        double maxHealth = mmoPlayer.getFunctionalStat("MAX_HEALTH");
+                        player.setHealth(maxHealth);
 
-                        // Apply the final scaled health value to the vanilla bar and UI
-                        plugin.getStatManager().applyScaledHealth(mmoPlayer);
+                        // Update UI
                         plugin.getUiManager().updateActionBar(mmoPlayer);
 
                         player.sendMessage("Welcome! Your MMOCore data has been loaded.");
@@ -57,6 +53,8 @@ public class PlayerConnectionListener implements Listener {
         MMOPlayer mmoPlayer = plugin.getPlayerManager().getMMOPlayer(player);
 
         if (mmoPlayer != null) {
+            // REMOVED: No more saving current health state
+
             new BukkitRunnable() {
                 @Override
                 public void run() {

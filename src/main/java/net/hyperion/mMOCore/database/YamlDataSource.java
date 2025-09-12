@@ -35,10 +35,13 @@ public class YamlDataSource implements IDataSource {
         config.set("character.name", mmoPlayer.getCharacterName());
         config.set("character.class", mmoPlayer.getPlayerClassId());
         config.set("character.skills", mmoPlayer.getLearnedSkills());
+
         config.set("stats.level", mmoPlayer.getLevel());
         config.set("stats.experience", mmoPlayer.getExperience());
         config.set("stats.attribute-points", mmoPlayer.getAttributePoints());
-        config.set("state.current-health", mmoPlayer.getCurrentHealth());
+
+        // REMOVED: No more saving current-health state
+        // config.set("state.current-health", mmoPlayer.getCurrentHealth());
 
         for (Map.Entry<String, Integer> entry : mmoPlayer.getPermanentAttributes().entrySet()) {
             config.set("stats.attributes." + entry.getKey(), entry.getValue());
@@ -64,7 +67,10 @@ public class YamlDataSource implements IDataSource {
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
         MMOPlayer mmoPlayer = new MMOPlayer(player.getUniqueId(), player.getName(), 1);
-        mmoPlayer.loadedHealth = config.getDouble("state.current-health", -1);
+
+        // REMOVED: No more loading current-health
+        // mmoPlayer.loadedHealth = config.getDouble("state.current-health", -1);
+
         mmoPlayer.setPlayerClassId(config.getString("character.class", "NONE"));
         mmoPlayer.getLearnedSkills().addAll(config.getStringList("character.skills"));
 
@@ -80,7 +86,6 @@ public class YamlDataSource implements IDataSource {
             java.lang.reflect.Field pointsField = MMOPlayer.class.getDeclaredField("attributePoints");
             pointsField.setAccessible(true);
             pointsField.setInt(mmoPlayer, config.getInt("stats.attribute-points", 0));
-
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -90,6 +95,7 @@ public class YamlDataSource implements IDataSource {
                 mmoPlayer.getPermanentAttributes().put(key.toUpperCase(), config.getInt("stats.attributes." + key));
             }
         }
+
         return mmoPlayer;
     }
 

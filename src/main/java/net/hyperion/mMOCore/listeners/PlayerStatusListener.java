@@ -4,6 +4,7 @@ import net.hyperion.mMOCore.MMOCore;
 import net.hyperion.mMOCore.data.MMOPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
@@ -15,23 +16,31 @@ public class PlayerStatusListener implements Listener {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             MMOPlayer mmoPlayer = plugin.getPlayerManager().getMMOPlayer(player);
             if (mmoPlayer != null) {
-                // We just need to update the display. The actual health is already changed.
                 plugin.getUiManager().updateActionBar(mmoPlayer);
             }
         }, 1L);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player) {
-            scheduleUpdate((Player) event.getEntity());
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player player = (Player) event.getEntity();
+        MMOPlayer mmoPlayer = plugin.getPlayerManager().getMMOPlayer(player);
+        if (mmoPlayer == null) return;
+
+        // Just update combat timer - let vanilla handle damage
+        if (!event.isCancelled() && event.getFinalDamage() > 0) {
+            mmoPlayer.setLastDamageTime(System.currentTimeMillis());
         }
+
+        scheduleUpdate(player);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onHeal(EntityRegainHealthEvent event) {
-        if (event.getEntity() instanceof Player) {
-            scheduleUpdate((Player) event.getEntity());
-        }
+        if (!(event.getEntity() instanceof Player)) return;
+
+        scheduleUpdate((Player) event.getEntity());
     }
 }
